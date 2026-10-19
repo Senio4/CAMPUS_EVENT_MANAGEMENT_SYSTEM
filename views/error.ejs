@@ -1,0 +1,13 @@
+<%- include('partials/header') %>
+
+<div class="card text-center" style="max-width:560px;margin:40px auto">
+  <div style="font-size:64px;font-weight:800;color:var(--cspc-blue)"><%= code %></div>
+  <h1 style="margin:8px 0"><%= title %></h1>
+  <p class="muted"><%= message %></p>
+  <div class="btn-row" style="justify-content:center;margin-top:16px">
+    <a class="btn" href="/">Go home</a>
+    <a class="btn secondary" href="javascript:history.back()">Go back</a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

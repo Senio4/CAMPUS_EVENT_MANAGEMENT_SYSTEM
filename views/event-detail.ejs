@@ -1,0 +1,224 @@
+<%- include('partials/header') %>
+
+<!-- ============================================================ -->
+<!-- EVENT HERO -->
+<!-- ============================================================ -->
+<% if (event.banner_path) { %>
+  <div class="event-hero">
+    <img src="<%= event.banner_path %>" alt="<%= event.title %>" class="event-hero-img">
+    <div class="event-hero-overlay"></div>
+    <div class="event-hero-content">
+      <span class="pill <%= event.live_status %>"><%= event.live_status %></span>
+      <h1 class="event-hero-title"><%= event.title %></h1>
+    </div>
+  </div>
+<% } else { %>
+  <div class="event-hero event-hero-fallback">
+    <div class="event-hero-content">
+      <span class="pill <%= event.live_status %>"><%= event.live_status %></span>
+      <h1 class="event-hero-title"><%= event.title %></h1>
+    </div>
+  </div>
+<% } %>
+
+<!-- ============================================================ -->
+<!-- TOOLBAR -->
+<!-- ============================================================ -->
+<div class="event-toolbar">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Events</a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current"><%= event.title %></span>
+  </nav>
+  <a class="btn secondary small" href="/">
+    <%- include('partials/icons', { iconName: 'arrow-left', size: 14 }) %>
+    Back to Events
+  </a>
+</div>
+
+<!-- ============================================================ -->
+<!-- LAYOUT: 2 columns, pantay ang tops -->
+<!-- ============================================================ -->
+<div class="event-layout">
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <div class="event-main">
+
+    <!-- About -->
+    <section class="event-section">
+      <h2 class="event-section-title">
+        <%- include('partials/icons', { iconName: 'info', size: 18 }) %>
+        About this Event
+      </h2>
+      <div class="event-section-body">
+        <p class="event-description"><%= event.description %></p>
+      </div>
+    </section>
+
+    <!-- Details -->
+    <section class="event-section">
+      <h2 class="event-section-title">
+        <%- include('partials/icons', { iconName: 'calendar', size: 18 }) %>
+        Event Details
+      </h2>
+      <div class="event-section-body">
+        <dl class="event-details-grid">
+
+          <div class="event-detail-item">
+            <dt>
+              <%- include('partials/icons', { iconName: 'calendar', size: 16 }) %>
+              <span>Starts</span>
+            </dt>
+            <dd><%= event.starts_fmt %></dd>
+          </div>
+
+          <div class="event-detail-item">
+            <dt>
+              <%- include('partials/icons', { iconName: 'calendar', size: 16 }) %>
+              <span>Ends</span>
+            </dt>
+            <dd><%= event.ends_fmt %></dd>
+          </div>
+
+          <div class="event-detail-item">
+            <dt>
+              <%- include('partials/icons', { iconName: 'map-pin', size: 16 }) %>
+              <span>Venue</span>
+            </dt>
+            <dd>
+              <%= event.venue_label %>
+              <% if (event.venue_detail) { %>
+                <span class="muted"> — <%= event.venue_detail %></span>
+              <% } %>
+            </dd>
+          </div>
+
+          <div class="event-detail-item">
+            <dt>
+              <%- include('partials/icons', { iconName: 'user', size: 16 }) %>
+              <span>Organizer</span>
+            </dt>
+            <dd><%= event.organizer_name %></dd>
+          </div>
+
+          <div class="event-detail-item">
+            <dt>
+              <%- include('partials/icons', { iconName: 'users', size: 16 }) %>
+              <span>Registered</span>
+            </dt>
+            <dd><%= event.registered_count %> / <%= event.capacity %></dd>
+          </div>
+
+          <div class="event-detail-item">
+            <dt>
+              <%- include('partials/icons', { iconName: 'check-circle', size: 16 }) %>
+              <span>Status</span>
+            </dt>
+            <dd><span class="pill <%= event.live_status %>"><%= event.live_status %></span></dd>
+          </div>
+
+          <div class="event-detail-item event-detail-wide">
+            <dt>
+              <%- include('partials/icons', { iconName: 'users', size: 16 }) %>
+              <span>Open to</span>
+            </dt>
+            <dd><div class="elig-chips"><% event.eligibility_list.forEach(function(n){ %><span class="elig-chip"><%= n %></span><% }); %></div></dd>
+          </div>
+
+        </dl>
+
+        <div class="event-detail-actions">
+          <a class="btn gold" href="/campus-map?venue=<%= event.venue_key %>">
+            <%- include('partials/icons', { iconName: 'map-pin', size: 14 }) %>
+            View on CSPC Campus Map
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= SIDEBAR ================= -->
+  <div class="event-sidebar">
+
+    <div class="event-sidebar-card">
+
+      <h3 class="event-sidebar-title">
+        <%- include('partials/icons', { iconName: 'qr-code', size: 18 }) %>
+        Registration
+      </h3>
+
+      <% if (!user) { %>
+        <p class="event-sidebar-text">
+          Please <a href="/login">log in</a> to register for this event.
+          <% if (event.restricted) { %><br><small class="muted">Open to:</small><div class="elig-chips"><% event.eligibility_list.forEach(function(n){ %><span class="elig-chip"><%= n %></span><% }); %></div><% } %>
+        </p>
+      <% } else if (myRegistration) { %>
+
+        <div class="alert success event-sidebar-alert">
+          <%- include('partials/icons', { iconName: 'check-circle', size: 16 }) %>
+          <span>You are registered for this event.</span>
+        </div>
+
+        <div class="event-qr-block">
+          <img id="qr-event" src="/qr/<%= myRegistration.qr_token %>.png" alt="Your QR code">
+          <button type="button"
+                  class="btn small gold block"
+                  data-download="qr-event"
+                  data-filename="cspc-event-<%= event.id %>.png">
+            <%- include('partials/icons', { iconName: 'download', size: 14 }) %>
+            Download QR PNG
+          </button>
+          <p class="event-qr-hint">
+            Show this QR at the entrance to be marked present.
+          </p>
+        </div>
+
+      <% } else if (user.role !== 'student') { %>
+
+        <div class="alert info event-sidebar-alert">
+          <%- include('partials/icons', { iconName: 'alert', size: 16 }) %>
+          <span>Only student accounts can register for events.</span>
+        </div>
+
+      <% } else if (event.live_status === 'completed' || event.live_status === 'cancelled') { %>
+
+        <div class="alert warning event-sidebar-alert">
+          <%- include('partials/icons', { iconName: 'alert', size: 16 }) %>
+          <span>Registration is closed for this event.</span>
+        </div>
+
+      <% } else if (!eligibility.ok) { %>
+
+        <div class="alert error event-sidebar-alert">
+          <%- include('partials/icons', { iconName: 'alert', size: 16 }) %>
+          <span><%= eligibility.message %></span>
+        </div>
+
+      <% } else if (event.live_status === 'full') { %>
+
+        <div class="alert warning event-sidebar-alert">
+          <%- include('partials/icons', { iconName: 'alert', size: 16 }) %>
+          <span>This event is already full.</span>
+        </div>
+
+      <% } else { %>
+
+        <p class="event-sidebar-text">
+          Fill out the registration form to receive your personal QR code for attendance.
+        </p>
+
+        <a class="btn block" href="/events/<%= event.id %>/register">
+          <%- include('partials/icons', { iconName: 'user-plus', size: 15 }) %>
+          Register for this Event
+        </a>
+
+      <% } %>
+
+    </div>
+
+  </div>
+
+</div>
+
+<%- include('partials/footer') %>

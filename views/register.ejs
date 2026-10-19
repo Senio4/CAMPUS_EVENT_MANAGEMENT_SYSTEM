@@ -1,0 +1,351 @@
+<%- include('partials/header') %>
+
+<%
+  const f = (typeof form !== 'undefined' && form) ? form : {};
+  const collegesList = (typeof colleges !== 'undefined' && Array.isArray(colleges) && colleges.length)
+    ? colleges : [];
+  const selectedRole = f.role ? f.role : 'student';
+  const roles = [
+    { value: 'student',    label: 'Student',    icon: '<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>' },
+    { value: 'organizer',  label: 'Organizer',  icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>' },
+    { value: 'instructor', label: 'Instructor', icon: '<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>' },
+    { value: 'admin',      label: 'Admin',      icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' }
+  ];
+  const eye = '<svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+              '<svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
+%>
+
+<section class="login-shell register-shell">
+  <!-- ========== LEFT: Brand panel ========== -->
+  <aside class="login-brand">
+    <div class="login-brand-inner">
+      <span class="login-brand-badge">
+        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.8 5.5 21 7.5 13.5 2 9h7z"/></svg>
+        CSPC Event Portal
+      </span>
+
+      <h2 class="login-brand-title">Join your campus<br>community.</h2>
+      <p class="login-brand-text">
+        Create your account in seconds, join campus events, and check in with your personal QR code.
+      </p>
+
+      <ul class="login-points">
+        <li>
+          <span class="login-point-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </span>
+          <span><strong>Choose your role</strong><small>Student, organizer, instructor or admin</small></span>
+        </li>
+        <li>
+          <span class="login-point-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </span>
+          <span><strong>Register for events</strong><small>Seminars, sports, org activities and more</small></span>
+        </li>
+        <li>
+          <span class="login-point-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M20 20h.01M17 17v3"/></svg>
+          </span>
+          <span><strong>QR check-in</strong><small>Fast, paperless attendance</small></span>
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- ========== RIGHT: Form panel ========== -->
+  <div class="login-panel">
+    <div class="login-panel-inner">
+      <div class="login-head">
+        <h1>Create your account</h1>
+        <p class="sub">Register to join CSPC Campus Events.</p>
+      </div>
+
+      <form method="POST" action="/register" id="registerForm" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+        <div class="register-fields">
+
+          <!-- Role -->
+          <div class="field">
+            <label id="roleLabel">I am registering as</label>
+            <div class="role-grid" role="radiogroup" aria-labelledby="roleLabel">
+              <% roles.forEach(r => { %>
+                <label class="role-card <%= selectedRole === r.value ? 'active' : '' %>">
+                  <input type="radio" name="role" value="<%= r.value %>" <%= selectedRole === r.value ? 'checked' : '' %>>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><%- r.icon %></svg>
+                  <span class="role-label"><%= r.label %></span>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- Name | Email -->
+          <div class="field">
+            <label for="name">Full name</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input id="name" type="text" name="name" required autocomplete="name"
+                     placeholder="Juan Dela Cruz" value="<%= f.name || '' %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="email">Email address</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+              <input id="email" type="email" name="email" required autocomplete="username"
+                     placeholder="you@cspc.edu.ph" value="<%= f.email || '' %>">
+            </div>
+          </div>
+
+          <!-- Password | Confirm -->
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 11-7.8 7.8 5.5 5.5 0 017.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg>
+              <input id="password" type="password" name="password" required minlength="8"
+                     autocomplete="new-password" placeholder="Create a password">
+              <button type="button" class="password-toggle" data-target="password" aria-label="Show password" aria-pressed="false"><%- eye %></button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="confirm">Confirm password</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input id="confirm" type="password" name="confirm" required minlength="8"
+                     autocomplete="new-password" placeholder="Re-enter password">
+              <button type="button" class="password-toggle" data-target="confirm" aria-label="Show password" aria-pressed="false"><%- eye %></button>
+            </div>
+          </div>
+
+          <p class="hint" id="pwHint">At least 8 characters, with a letter and a number.</p>
+          <p class="hint field-error" id="confirmError" hidden>Passwords don't match.</p>
+
+          <!-- ===== Role-specific fields (paired automatically by JS) ===== -->
+
+          <div class="role-fields" id="roleFields">
+          <div class="field role-field" data-role="student organizer instructor">
+            <label for="college">College</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+              <% if (collegesList.length) { %>
+                <select id="college" name="college">
+                  <option value="">Select college</option>
+                  <% collegesList.forEach(c => { %>
+                    <option value="<%= c.code %>" <%= f.college === c.code ? 'selected' : '' %>><%= c.name %></option>
+                  <% }); %>
+                </select>
+              <% } else { %>
+                <input id="college" type="text" name="college" placeholder="e.g. CCS" value="<%= f.college || '' %>">
+              <% } %>
+            </div>
+          </div>
+
+          <div class="field role-field" data-role="student instructor">
+            <label for="program">Program</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg>
+              <% if (collegesList.length) { %>
+                <select id="program" name="program">
+                  <option value="">Select college first</option>
+                </select>
+              <% } else { %>
+                <input id="program" type="text" name="program" placeholder="e.g. BS Information Technology" value="<%= f.program || '' %>">
+              <% } %>
+            </div>
+          </div>
+
+          <div class="field-row">
+          <div class="field role-field" data-role="student">
+            <label for="year_level">Year level</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l10 5-10 5L2 7z"/><path d="M2 12l10 5 10-5M2 17l10 5 10-5"/></svg>
+              <% if (collegesList.length) { %>
+                <select id="year_level" name="year_level">
+                  <option value="">Select</option>
+                  <% ['1st Year','2nd Year','3rd Year','4th Year','5th Year'].forEach(y => { %>
+                    <option value="<%= y %>" <%= f.year_level === y ? 'selected' : '' %>><%= y %></option>
+                  <% }); %>
+                </select>
+              <% } else { %>
+                <input id="year_level" type="text" name="year_level" placeholder="e.g. 2nd" value="<%= f.year_level || '' %>">
+              <% } %>
+            </div>
+          </div>
+
+          <div class="field role-field" data-role="student">
+            <label for="section">Section</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></svg>
+              <input id="section" type="text" name="section" placeholder="e.g. 2A" value="<%= f.section || '' %>">
+            </div>
+          </div>
+
+          </div>
+
+          <div class="field role-field" data-role="organizer">
+            <label for="organizer_position">Position / role title</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+              <input id="organizer_position" type="text" name="organizer_position"
+                     placeholder="e.g. Events Officer" value="<%= f.organizer_position || '' %>">
+            </div>
+          </div>
+
+          <div class="field role-field" data-role="organizer">
+            <label for="organizer_office">Office / unit</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <input id="organizer_office" type="text" name="organizer_office"
+                     placeholder="e.g. SASO, Student Affairs" value="<%= f.organizer_office || '' %>">
+            </div>
+          </div>
+
+          <div class="field role-field" data-role="instructor">
+            <label for="section_instructor">Sections you handle</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+              <input id="section_instructor" type="text" name="section"
+                     placeholder="e.g. BSIT-2A, BSIT-3A" value="<%= f.section || '' %>">
+            </div>
+            <p class="hint">Comma-separated, SHORTCODE-SECTION (e.g. BSIT-2A, BSCS-1B).</p>
+          </div>
+
+          <div class="field role-field" data-role="admin">
+            <label for="admin_code">Admin registration code</label>
+            <div class="input-with-icon">
+              <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <input id="admin_code" type="password" name="admin_code" autocomplete="off" placeholder="Enter admin code">
+            </div>
+            <p class="hint">Required for admin registration.</p>
+          </div>
+
+          </div>
+        </div>
+
+        <button class="btn block login-submit" type="submit">
+          Create account
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </form>
+
+      <p class="login-alt">
+        Already have an account? <a href="/login">Log in</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<script type="application/json" id="register-data">
+  <%- JSON.stringify({ colleges: collegesList, savedProgram: f.program || '' }).replace(/</g, '\\u003c') %>
+</script>
+<script>
+  (function () {
+    var data = { colleges: [], savedProgram: '' };
+    try { data = JSON.parse(document.getElementById('register-data').textContent); } catch (e) {}
+
+    /* ---------- Role switching ---------- */
+    var roleRadios = document.querySelectorAll('input[name="role"]');
+    var roleFields = Array.prototype.slice.call(document.querySelectorAll('.role-field'));
+    var roleCards  = document.querySelectorAll('.role-card');
+
+    var roleWrap = document.getElementById('roleFields');
+
+    function applyRole(role) {
+      roleFields.forEach(function (field) {
+        var show = field.getAttribute('data-role').split(' ').indexOf(role) !== -1;
+        field.style.display = show ? '' : 'none';
+        // disabled inputs are not submitted (prevents duplicate "section" values)
+        field.querySelectorAll('input, select').forEach(function (el) { el.disabled = !show; });
+      });
+    }
+
+    function updateRoleFields() {
+      var current = document.querySelector('input[name="role"]:checked');
+      var role = current ? current.value : 'student';
+      roleCards.forEach(function (card) {
+        card.classList.toggle('active', card.querySelector('input').checked);
+      });
+      applyRole(role);
+    }
+
+    // Keep the card the same size for every role: reserve the height of the tallest one
+    function lockHeight() {
+      var current = document.querySelector('input[name="role"]:checked');
+      var role = current ? current.value : 'student';
+      roleWrap.style.minHeight = '';
+      var max = 0;
+      ['student', 'organizer', 'instructor', 'admin'].forEach(function (r) {
+        applyRole(r);
+        max = Math.max(max, roleWrap.offsetHeight);
+      });
+      roleWrap.style.minHeight = max + 'px';
+      applyRole(role);
+    }
+
+    roleRadios.forEach(function (r) { r.addEventListener('change', updateRoleFields); });
+    updateRoleFields();
+    lockHeight();
+    window.addEventListener('load', lockHeight);
+    window.addEventListener('resize', lockHeight);
+
+    /* ---------- College -> Program ---------- */
+    var collegeSel = document.getElementById('college');
+    var programSel = document.getElementById('program');
+
+    if (data.colleges.length && collegeSel && programSel && collegeSel.tagName === 'SELECT') {
+      function updatePrograms() {
+        var college = null;
+        for (var i = 0; i < data.colleges.length; i++) {
+          if (data.colleges[i].code === collegeSel.value) { college = data.colleges[i]; break; }
+        }
+        programSel.innerHTML = '<option value="">' + (college ? 'Select program' : 'Select college first') + '</option>';
+        if (!college) return;
+        college.programs.forEach(function (p) {
+          var opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p;
+          if (p === data.savedProgram) opt.selected = true;
+          programSel.appendChild(opt);
+        });
+      }
+      collegeSel.addEventListener('change', updatePrograms);
+      updatePrograms();
+    }
+
+    /* ---------- Show / hide password ---------- */
+    document.querySelectorAll('.password-toggle').forEach(function (btn) {
+      var input = document.getElementById(btn.getAttribute('data-target'));
+      var open = btn.querySelector('.eye-open');
+      var closed = btn.querySelector('.eye-closed');
+      btn.addEventListener('click', function () {
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        open.style.display = show ? 'none' : '';
+        closed.style.display = show ? '' : 'none';
+        btn.setAttribute('aria-pressed', show);
+        btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      });
+    });
+
+    /* ---------- Confirm-password check ---------- */
+    var pw = document.getElementById('password');
+    var cf = document.getElementById('confirm');
+    var err = document.getElementById('confirmError');
+    var hint = document.getElementById('pwHint');
+    function checkMatch() {
+      var bad = cf.value.length > 0 && pw.value !== cf.value;
+      err.hidden = !bad;
+      hint.hidden = bad;
+      return !bad;
+    }
+    pw.addEventListener('input', checkMatch);
+    cf.addEventListener('input', checkMatch);
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+      if (!checkMatch() || pw.value !== cf.value) { e.preventDefault(); err.hidden = false; hint.hidden = true; cf.focus(); }
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>

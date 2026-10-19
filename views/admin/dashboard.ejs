@@ -1,0 +1,48 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Admin Dashboard</h1>
+    <p>Overview of events, users, and attendance.</p>
+  </div>
+  <a class="btn secondary" href="/admin/users">Manage users</a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat"><div class="label">Total events</div><div class="value"><%= stats.totalEvents %></div></div>
+  <div class="stat"><div class="label">Total users</div><div class="value"><%= stats.totalUsers %></div></div>
+  <div class="stat"><div class="label">Students</div><div class="value"><%= stats.totalStudents %></div></div>
+  <div class="stat"><div class="label">Registrations</div><div class="value"><%= stats.totalRegs %></div></div>
+  <div class="stat"><div class="label">Marked present</div><div class="value"><%= stats.totalPresent %></div></div>
+</div>
+
+<div class="card">
+  <h3 class="mt-0">Events by status</h3>
+  <div class="btn-row">
+    <% stats.byStatus.forEach(s => { %>
+      <span class="pill <%= s.status %>"><%= s.status %> · <%= s.c %></span>
+    <% }); %>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <h3 class="mt-0">Recent events</h3>
+  <div class="scroll-x">
+    <table>
+      <thead><tr><th>Title</th><th>When</th><th>Venue</th><th>Status</th><th>Registered</th></tr></thead>
+      <tbody>
+        <% events.slice(0, 10).forEach(e => { %>
+          <tr>
+            <td><a href="/events/<%= e.id %>"><%= e.title %></a></td>
+            <td><%= e.starts_fmt %></td>
+            <td><%= e.venue_label %></td>
+            <td><span class="pill <%= e.live_status %>"><%= e.live_status %></span></td>
+            <td><%= e.registered_count %>/<%= e.capacity %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,180 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1><%= mode === 'create' ? 'Create Event' : 'Edit Event' %></h1>
+    <p>Fill in the details below. Upload a banner or pubmat for the event.</p>
+  </div>
+  <a class="btn secondary" href="/organizer/events">← Back</a>
+</div>
+
+<form method="POST"
+      action="<%= mode === 'create' ? '/organizer/events' : '/organizer/events/' + event.id %>"
+      enctype="multipart/form-data"
+      class="card">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+  <div class="field">
+    <label for="title">Title</label>
+    <input id="title" type="text" name="title" required value="<%= event.title || '' %>">
+  </div>
+
+  <div class="field">
+    <label for="description">Description</label>
+    <textarea id="description" name="description" required><%= event.description || '' %></textarea>
+  </div>
+
+  <div class="field">
+    <label for="banner">Event Banner / Pubmat</label>
+    <input id="banner" type="file" name="banner" accept="image/*"
+           onchange="previewBanner(this)">
+    <p class="hint">JPG, PNG, WEBP, or GIF · Max 5 MB</p>
+  </div>
+
+  <div class="field" id="bannerPreviewWrap"<% if (event.banner_path) { %> style="display:block;"<% } else { %> hidden<% } %>>
+    <label>Preview</label>
+    <div>
+      <img id="bannerPreview"
+           src="<%= event.banner_path || '' %>"
+           alt="Event banner preview"
+           style="max-width:100%;max-height:320px;border-radius:12px;border:1px solid var(--border);display:block">
+    </div>
+    <% if (mode === 'edit' && event.banner_path) { %>
+      <div style="margin-top:8px">
+        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:6px">
+          <input type="checkbox" name="remove_banner" value="1" style="width:auto">
+          Remove current banner
+        </label>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="field">
+      <label for="venue_key">Venue</label>
+      <select id="venue_key" name="venue_key" required>
+        <% venues.forEach(v => { %>
+          <option value="<%= v.key %>" <%= event.venue_key === v.key ? 'selected' : '' %>><%= v.label %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div class="field">
+      <label for="venue_detail">Venue detail (optional)</label>
+      <input id="venue_detail" type="text" name="venue_detail"
+             value="<%= event.venue_detail || '' %>"
+             placeholder="e.g. Main court, 2nd floor">
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="field">
+      <label for="starts_at">Starts at</label>
+      <input id="starts_at" type="datetime-local" name="starts_at" required
+             value="<%= (event.starts_at || '').replace(' ', 'T') %>">
+    </div>
+    <div class="field">
+      <label for="ends_at">Ends at</label>
+      <input id="ends_at" type="datetime-local" name="ends_at" required
+             value="<%= (event.ends_at || '').replace(' ', 'T') %>">
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="field">
+      <label for="capacity">Capacity</label>
+      <input id="capacity" type="number" name="capacity" min="1" max="5000" required
+             value="<%= event.capacity || 50 %>">
+    </div>
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <% ['draft','open','ongoing','completed','cancelled'].forEach(s => { %>
+          <option value="<%= s %>" <%= event.status === s ? 'selected' : '' %>><%= s %></option>
+        <% }); %>
+      </select>
+    </div>
+  </div>
+
+  <%
+    const selected = String(event.eligible_colleges || '').split(',').map(s => s.trim()).filter(Boolean);
+    const isSpecific = selected.length > 0 || event.audience === 'specific';
+  %>
+  <div class="field audience-field">
+    <label>Who can register?</label>
+    <label style="font-weight:400;display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <input type="radio" name="audience" value="all" style="width:auto" <%= isSpecific ? '' : 'checked' %> onchange="toggleAudience()">
+      All students (any department)
+    </label>
+    <label style="font-weight:400;display:flex;align-items:center;gap:8px">
+      <input type="radio" name="audience" value="specific" style="width:auto" <%= isSpecific ? 'checked' : '' %> onchange="toggleAudience()">
+      Only specific departments / colleges
+    </label>
+
+    <div id="collegePicker" class="card" style="margin-top:10px;<%= isSpecific ? '' : 'display:none' %>">
+      <p class="hint" style="margin-top:0">Everyone can still <strong>view</strong> the event, but only students from the ticked departments can register.</p>
+      <div class="grid grid-2">
+        <% COLLEGES.forEach(c => { %>
+          <label style="font-weight:400;display:flex;align-items:center;gap:8px">
+            <input type="checkbox" name="eligible_colleges" value="<%= c.code %>" style="width:auto" <%= selected.includes(c.code) ? 'checked' : '' %>>
+            <%= c.name %> (<%= c.code %>)
+          </label>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn" type="submit"><%= mode === 'create' ? 'Create event' : 'Save changes' %></button>
+    <a class="btn secondary" href="/organizer/events">Cancel</a>
+  </div>
+</form>
+
+<% if (mode === 'edit') { %>
+  <div class="card">
+    <h3 class="mt-0">Quick actions</h3>
+    <div class="btn-row">
+      <form method="POST" action="/organizer/events/<%= event.id %>/post">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn small">Post (open)</button>
+      </form>
+      <form method="POST" action="/organizer/events/<%= event.id %>/start">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn small gold">Start</button>
+      </form>
+      <form method="POST" action="/organizer/events/<%= event.id %>/complete">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn small secondary">Complete</button>
+      </form>
+      <form method="POST" action="/organizer/events/<%= event.id %>/cancel">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn small danger">Cancel</button>
+      </form>
+      <form method="POST" action="/organizer/events/<%= event.id %>/delete"
+            onsubmit="return confirm('Delete this event? This cannot be undone.')">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn small danger">Delete</button>
+      </form>
+    </div>
+  </div>
+<% } %>
+
+<script>
+  function toggleAudience() {
+    var specific = document.querySelector('input[name="audience"][value="specific"]').checked;
+    document.getElementById('collegePicker').style.display = specific ? '' : 'none';
+  }
+  function previewBanner(input) {
+    var wrap = document.getElementById('bannerPreviewWrap');
+    var img = document.getElementById('bannerPreview');
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        img.src = e.target.result;
+        wrap.style.display = 'block';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+</script>
+
+<%- include('../partials/footer') %>

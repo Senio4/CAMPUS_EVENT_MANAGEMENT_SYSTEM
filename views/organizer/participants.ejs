@@ -1,0 +1,14 @@
+<%- include('../partials/header') %>
+<p><a href="/organizer">&larr; Back</a></p>
+<h1>Participants — <%= ev.title %></h1>
+<p class="muted"><%= rows.length %> registered · <%= ev.attended_count %> attended</p>
+<% if (!rows.length) { %><p class="muted">No one has registered yet.</p><% } else { %>
+<div class="scroll"><table>
+  <thead><tr><th>Name</th><th>Department</th><th>Year</th><th>Section</th><th>Registered</th><th>Attendance</th></tr></thead>
+  <tbody><% rows.forEach(function(r){ %>
+    <tr><td><%= r.name %></td><td><%= r.department %></td><td><%= r.year_level %></td><td><%= r.section %></td>
+    <td><%= fmtDateTime(r.created_at) %></td><td><%= r.scanned_at ? 'Attended' : '—' %></td></tr>
+  <% }) %></tbody>
+</table></div>
+<% } %>
+<%- include('../partials/footer') %>

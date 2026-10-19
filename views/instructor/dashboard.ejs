@@ -1,0 +1,80 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Instructor Dashboard</h1>
+    <p>
+      Handling:
+      <strong>
+        <% if (sectionCodes.length) { %>
+          <%= sectionCodes.map(c => c.program + '-' + c.section).join(', ') %>
+        <% } else { %>
+          No sections assigned
+        <% } %>
+      </strong>
+    </p>
+  </div>
+  <a class="btn secondary" href="/instructor/students">👥 My Students</a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="label">My Students</div>
+    <div class="value"><%= totalStudents %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Registrations in My Sections</div>
+    <div class="value"><%= totalSectionRegistrations %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Marked Present</div>
+    <div class="value"><%= totalSectionPresent %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Events with My Students</div>
+    <div class="value"><%= events.length %></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 class="mt-0">Events with attendance from my sections</h3>
+  <% if (!events.length) { %>
+    <p class="muted">No events yet. Your students' event attendance will appear here.</p>
+  <% } else { %>
+    <div class="scroll-x">
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>When</th>
+            <th>Venue</th>
+            <th>Status</th>
+            <th>My Sections</th>
+            <th>Present</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% events.forEach(e => { %>
+            <tr>
+              <td><strong><%= e.title %></strong></td>
+              <td><%= e.starts_fmt %></td>
+              <td><%= e.venue_label %></td>
+              <td><span class="pill <%= e.live_status %>"><%= e.live_status %></span></td>
+              <td><%= e.section_registered_count %></td>
+              <td>
+                <strong><%= e.section_present_count %></strong>
+                <span class="muted">/ <%= e.section_registered_count %></span>
+              </td>
+              <td>
+                <a class="btn small" href="/instructor/events/<%= e.id %>">View attendance</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

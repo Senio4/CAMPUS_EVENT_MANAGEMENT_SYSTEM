@@ -1,0 +1,38 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>My Profile</h1>
+    <p>Your picture is shown next to your name in event attendance lists.</p>
+  </div>
+</div>
+
+<div class="card profile-card">
+  <div class="profile-avatar">
+    <%- include('partials/avatar', { avatarPath: profile.avatar_path, name: profile.name, size: 'lg' }) %>
+  </div>
+
+  <div class="profile-info">
+    <h2 class="mt-0"><%= profile.name %></h2>
+    <p class="muted" style="margin:0 0 14px"><%= profile.email %> · <span style="text-transform:capitalize"><%= profile.role %></span></p>
+
+    <form method="POST" action="/profile/avatar" enctype="multipart/form-data" class="profile-upload">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="field">
+        <label for="avatar">Upload a profile picture</label>
+        <input type="file" id="avatar" name="avatar" accept="image/jpeg,image/png,image/webp" required>
+        <small class="muted">JPG, PNG, or WEBP · up to 2 MB · a square photo works best.</small>
+      </div>
+      <button class="btn" type="submit">Save picture</button>
+    </form>
+
+    <% if (profile.avatar_path) { %>
+      <form method="POST" action="/profile/avatar/remove" style="margin-top:10px">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn secondary small" type="submit">Remove picture</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

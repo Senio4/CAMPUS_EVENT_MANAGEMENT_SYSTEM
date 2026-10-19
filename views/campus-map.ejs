@@ -1,0 +1,31 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>CSPC Campus Map</h1>
+    <p>All buildings, colleges, and offices at the Nabua Campus. Search or click a pin for details.</p>
+  </div>
+</div>
+
+<%- include('partials/campus-map', { highlight: highlight }) %>
+
+<details class="card campus-photo-card" open>
+  <summary>
+    <span class="campus-photo-summary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+      CSPC Campus Photo
+    </span>
+  </summary>
+  <figure class="campus-photo-figure">
+    <img src="/img/cspc-campus.jpg" alt="CSPC Campus — Camarines Sur Polytechnic Colleges">
+    <figcaption>
+      Camarines Sur Polytechnic Colleges — Nabua, Camarines Sur
+    </figcaption>
+  </figure>
+</details>
+
+<%- include('partials/footer') %>

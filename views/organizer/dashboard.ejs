@@ -1,0 +1,76 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Manage Events</h1>
+    <p><%= events.length %> event<%= events.length === 1 ? '' : 's' %></p>
+  </div>
+  <a class="btn" href="/organizer/events/new">+ Create event</a>
+</div>
+
+<% if (!events.length) { %>
+  <div class="card text-center">
+    <p class="muted">No events yet.</p>
+    <a class="btn" href="/organizer/events/new">Create your first event</a>
+  </div>
+<% } else { %>
+  <div class="scroll-x">
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>When</th>
+          <th>Venue</th>
+          <th>Status</th>
+          <th>Registered</th>
+          <th>Present</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% events.forEach(e => { %>
+          <tr>
+            <td>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <% if (e.banner_path) { %>
+                  <img src="<%= e.banner_path %>" alt=""
+                       style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--border)">
+                <% } else { %>
+                  <div style="width:56px;height:56px;border-radius:8px;background:var(--bg-soft);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px">📅</div>
+                <% } %>
+                <div>
+                  <a href="/organizer/events/<%= e.id %>"><strong><%= e.title %></strong></a>
+                  <br>
+                  <span class="muted" style="font-size:12px">
+                    <%= e.description.slice(0, 50) %><%= e.description.length > 50 ? '…' : '' %>
+                  </span>
+                </div>
+              </div>
+            </td>
+            <td><%= e.starts_fmt || formatDate(e.starts_at) %></td>
+            <td>
+              <% const venueBackground = e.venue_color || venueColor(e.venue_key) %>
+              <span class="pill" <%= `style="background-color: ${venueBackground}; color: #fff"` %>>
+                <%= e.venue_label || venueLabel(e.venue_key) %>
+              </span>
+              <% if (e.venue_detail) { %>
+                <br><span class="muted" style="font-size:12px"><%= e.venue_detail %></span>
+              <% } %>
+            </td>
+            <td><span class="pill <%= e.live_status %>"><%= e.live_status %></span></td>
+            <td><%= e.registered_count %>/<%= e.capacity %></td>
+            <td><%= e.present_count %></td>
+            <td>
+              <div class="btn-row">
+                <a class="btn small" href="/organizer/events/<%= e.id %>">Edit</a>
+                <a class="btn small secondary" href="/organizer/events/<%= e.id %>/attendance">Attendance</a>
+              </div>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

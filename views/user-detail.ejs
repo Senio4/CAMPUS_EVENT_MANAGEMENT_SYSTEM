@@ -1,0 +1,68 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1><%= person.role === 'student' ? 'Student Profile' : 'User Profile' %></h1>
+    <p>Profile details and event history.</p>
+  </div>
+  <a class="btn secondary" href="<%= backHref %>">← <%= backLabel %></a>
+</div>
+
+<div class="card profile-card">
+  <div class="profile-avatar">
+    <% if (person.avatar_path) { %>
+      <a href="<%= person.avatar_path %>" target="_blank" rel="noopener" title="View full picture">
+        <%- include('partials/avatar', { avatarPath: person.avatar_path, name: person.name, size: 'lg' }) %>
+      </a>
+      <div class="muted" style="font-size:12px;text-align:center;margin-top:6px">Click to enlarge</div>
+    <% } else { %>
+      <%- include('partials/avatar', { avatarPath: null, name: person.name, size: 'lg' }) %>
+      <div class="muted" style="font-size:12px;text-align:center;margin-top:6px">No picture uploaded</div>
+    <% } %>
+  </div>
+
+  <div class="profile-info">
+    <h2 class="mt-0" style="margin-bottom:4px"><%= person.name %></h2>
+    <p style="margin:0 0 14px"><span class="pill open" style="text-transform:capitalize"><%= person.role %></span></p>
+
+    <dl class="profile-facts">
+      <div><dt>Email</dt><dd><%= person.email %></dd></div>
+      <% if (person.college) { %><div><dt>College</dt><dd><%= person.college %></dd></div><% } %>
+      <% if (person.department) { %><div><dt>Department</dt><dd><%= person.department %></dd></div><% } %>
+      <% if (person.program) { %><div><dt>Program</dt><dd><%= person.program %></dd></div><% } %>
+      <% if (person.year_level) { %><div><dt>Year level</dt><dd><%= person.year_level %></dd></div><% } %>
+      <% if (person.section) { %><div><dt><%= person.role === 'instructor' ? 'Handles' : 'Section' %></dt><dd><%= person.section %></dd></div><% } %>
+      <% if (person.organizer_position) { %><div><dt>Position</dt><dd><%= person.organizer_position %></dd></div><% } %>
+      <% if (person.organizer_office) { %><div><dt>Office</dt><dd><%= person.organizer_office %></dd></div><% } %>
+      <div><dt>Joined</dt><dd><%= formatDateOnly(person.created_at) %></dd></div>
+    </dl>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <h3 class="mt-0">Event registrations</h3>
+  <% if (!registrations.length) { %>
+    <p class="muted">No event registrations yet.</p>
+  <% } else { %>
+    <div class="scroll-x">
+      <table>
+        <thead><tr><th>Event</th><th>When</th><th>Event status</th><th>Attendance</th></tr></thead>
+        <tbody>
+          <% registrations.forEach(r => { %>
+            <tr>
+              <td><strong><%= r.event_title %></strong></td>
+              <td><%= r.starts_fmt %></td>
+              <td><span class="pill <%= r.live_status %>"><%= r.live_status %></span></td>
+              <td>
+                <% if (r.present) { %><span class="pill open">present</span>
+                <% } else { %><span class="pill cancelled">absent</span><% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

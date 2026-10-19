@@ -1,0 +1,393 @@
+<%
+  const hl = typeof highlight !== 'undefined' ? highlight : null;
+  const buildings  = (typeof BUILDINGS  !== 'undefined' && Array.isArray(BUILDINGS)  && BUILDINGS.length)  ? BUILDINGS  : [];
+  const categories = (typeof CATEGORIES !== 'undefined' && Array.isArray(CATEGORIES) && CATEGORIES.length) ? CATEGORIES : [];
+  const gate       = (typeof MAIN_GATE  !== 'undefined' && MAIN_GATE)  ? MAIN_GATE  : { lat: 13.405773, lng: 123.374242 };
+  const center     = (typeof CAMPUS_CENTER !== 'undefined' && CAMPUS_CENTER) ? CAMPUS_CENTER : { lat: 13.4059, lng: 123.3758, zoom: 18 };
+%>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+<div class="map-search">
+  <input type="text" id="mapSearch" placeholder="🔍 Search building or office (SASO, CCS, Registrar...)" autocomplete="off">
+  <div id="searchResults" class="search-results" style="display:none"></div>
+</div>
+
+<div class="map-filters">
+  <button type="button" class="filter-btn active" data-category="all">All</button>
+  <% categories.forEach(c => { %>
+    <button type="button" class="filter-btn" data-category="<%= c.key %>">
+      <span class="dot" data-category-color="<%= c.color %>"></span><%= c.label %>
+    </button>
+  <% }); %>
+</div>
+
+<div class="campus-map-wrap">
+  <div id="cspcMap" style="width:100%;height:600px;"></div>
+  <div class="map-legend">
+    <% categories.forEach(c => { %>
+      <span><span class="dot" data-category-color="<%= c.color %>"></span><%= c.label %></span>
+    <% }); %>
+    <span class="muted" style="margin-left:auto">Click a building name for details &amp; directions</span>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('[data-category-color]').forEach(function (dot) {
+    dot.style.backgroundColor = dot.dataset.categoryColor;
+  });
+</script>
+
+<div class="building-panel" id="buildingPanel" style="display:none">
+  <div class="flex-between">
+    <h3 id="bpTitle" style="margin:0">Building</h3>
+    <button type="button" class="btn small secondary" id="bpCloseBtn">✕</button>
+  </div>
+  <p id="bpCategory" class="muted" style="font-size:12px;margin:4px 0 10px"></p>
+  <div id="bpContent"></div>
+  <div class="btn-row" style="margin-top:12px">
+    <button type="button" class="btn small" id="bpRouteBtn">🧭 Walking route from Main Gate</button>
+    <a id="bpGmapsLink" class="btn small secondary" target="_blank" rel="noopener">Open in Google Maps ↗</a>
+    <button type="button" class="btn small secondary" id="bpClearBtn" style="display:none">Clear route</button>
+  </div>
+  <ol id="bpDirections" style="margin-top:12px;color:var(--text-muted)"></ol>
+</div>
+
+<script type="application/json" id="campusMapData">
+  <%- JSON.stringify({ buildings, categories, gate, center, highlightKey: hl }) %>
+</script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+  (function () {
+    var el = document.getElementById('campusMapData');
+    if (!el || typeof L === 'undefined') return;
+    var data;
+    try { data = JSON.parse(el.textContent); } catch (e) { return; }
+
+    var buildings = data.buildings || [];
+    var categories = data.categories || [];
+    var gate = data.gate;
+    var center = data.center;
+    var highlightKey = data.highlightKey;
+
+    var map = L.map('cspcMap', {
+      center: [center.lat, center.lng],
+      zoom: center.zoom || 18,
+      zoomControl: true,
+      scrollWheelZoom: true,
+    });
+
+    var street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 20,
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+
+    var satellite = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+    );
+
+    L.control.layers(
+      { '🗺️ Street': street, '🛰️ Satellite': satellite },
+      null, { position: 'topright', collapsed: false }
+    ).addTo(map);
+
+    L.marker([gate.lat, gate.lng], {
+      icon: L.divIcon({
+        className: 'map-text-label',
+        html: '<div class="gate-label">🚪 CSPC Main Gate</div>',
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
+      }),
+      interactive: false,
+    }).addTo(map);
+
+    var markers = {};
+    var markerLayer = L.layerGroup().addTo(map);
+
+    buildings.forEach(function (b) {
+      var isHi = highlightKey === b.key;
+      var labelHtml =
+        '<div class="building-label ' + (isHi ? 'building-label-hi' : '') + '" ' +
+             'style="--label-color:' + b.color + '">' +
+          '<span class="building-label-dot" style="background:' + b.color + '"></span>' +
+          '<span class="building-label-text">' + b.short + '</span>' +
+        '</div>';
+
+      var marker = L.marker([b.lat, b.lng], {
+        icon: L.divIcon({ className: 'map-text-label', html: labelHtml, iconSize: [0, 0], iconAnchor: [0, 0] }),
+        title: b.label,
+      });
+      marker.on('click', function () { showBuilding(b); });
+      marker.addTo(markerLayer);
+      markers[b.key] = marker;
+    });
+
+    var routeLine = null;
+    var activeBuilding = null;
+
+    function showBuilding(b) {
+      activeBuilding = b;
+      var panel = document.getElementById('buildingPanel');
+      var title = document.getElementById('bpTitle');
+      var cat = document.getElementById('bpCategory');
+      var content = document.getElementById('bpContent');
+      var gLink = document.getElementById('bpGmapsLink');
+      var dirs = document.getElementById('bpDirections');
+
+      title.textContent = b.label;
+      var catObj = categories.find(function (c) { return c.key === b.category; });
+      cat.textContent = catObj ? catObj.label : b.category;
+
+      var html = '';
+      if (b.colleges && b.colleges.length) {
+        html += '<strong>Colleges / Programs:</strong><ul style="margin:6px 0 0 18px">';
+        b.colleges.forEach(function (c) { html += '<li>' + c + '</li>'; });
+        html += '</ul>';
+      }
+      if (b.offices && b.offices.length) {
+        html += '<strong>Offices:</strong><ul style="margin:6px 0 0 18px">';
+        b.offices.forEach(function (o) { html += '<li>' + o + '</li>'; });
+        html += '</ul>';
+      }
+      if (b.facilities && b.facilities.length) {
+        html += '<strong>Facilities:</strong><ul style="margin:6px 0 0 18px">';
+        b.facilities.forEach(function (f) { html += '<li>' + f + '</li>'; });
+        html += '</ul>';
+      }
+      if (b.note) html += '<p class="muted" style="font-size:13px;margin-top:10px">' + b.note + '</p>';
+      content.innerHTML = html;
+
+      gLink.href = 'https://www.google.com/maps/dir/?api=1&origin=' +
+                   gate.lat + ',' + gate.lng +
+                   '&destination=' + b.lat + ',' + b.lng +
+                   '&travelmode=walking';
+
+      var dist = Math.round(distance(gate.lat, gate.lng, b.lat, b.lng));
+      dirs.innerHTML =
+        '<li>Enter at CSPC Main Gate (Maharlika Highway)</li>' +
+        '<li>Walk about ' + dist + ' meters toward the campus center</li>' +
+        '<li>' + b.label + ' will be on your ' + (b.lng > gate.lng ? 'left' : 'right') + '</li>';
+
+      panel.style.display = 'block';
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      map.flyTo([b.lat, b.lng], 19, { duration: 0.6 });
+    }
+
+    function closePanel() {
+      document.getElementById('buildingPanel').style.display = 'none';
+      clearRoute();
+    }
+
+    function drawRoute(b) {
+      if (routeLine) map.removeLayer(routeLine);
+      routeLine = L.polyline(
+        [[gate.lat, gate.lng], [b.lat, b.lng]],
+        { color: '#0b3d91', weight: 4, dashArray: '10 8', opacity: 0.85 }
+      ).addTo(map);
+      map.fitBounds(routeLine.getBounds(), { padding: [80, 80] });
+      document.getElementById('bpClearBtn').style.display = 'inline-flex';
+    }
+
+    function clearRoute() {
+      if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+      var btn = document.getElementById('bpClearBtn');
+      if (btn) btn.style.display = 'none';
+    }
+
+    document.getElementById('bpRouteBtn').addEventListener('click', function () {
+      if (activeBuilding) drawRoute(activeBuilding);
+    });
+    document.getElementById('bpClearBtn').addEventListener('click', clearRoute);
+    document.getElementById('bpCloseBtn').addEventListener('click', closePanel);
+
+    var searchInput = document.getElementById('mapSearch');
+    var searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', function () {
+      var q = searchInput.value.toLowerCase().trim();
+      if (!q) { searchResults.style.display = 'none'; return; }
+      var matches = buildings.filter(function (b) {
+        return (
+          b.label.toLowerCase().indexOf(q) !== -1 ||
+          b.short.toLowerCase().indexOf(q) !== -1 ||
+          (b.colleges || []).some(function (c) { return c.toLowerCase().indexOf(q) !== -1; }) ||
+          (b.offices || []).some(function (o) { return o.toLowerCase().indexOf(q) !== -1; })
+        );
+      }).slice(0, 8);
+
+      if (!matches.length) {
+        searchResults.innerHTML = '<div class="search-item muted">No matches</div>';
+      } else {
+        searchResults.innerHTML = matches.map(function (b) {
+          return '<div class="search-item" data-key="' + b.key + '">' +
+                   '<span class="dot" style="background:' + b.color + '"></span>' +
+                   '<strong>' + b.short + '</strong> — ' + b.label +
+                 '</div>';
+        }).join('');
+      }
+      searchResults.style.display = 'block';
+
+      searchResults.querySelectorAll('.search-item[data-key]').forEach(function (item) {
+        item.addEventListener('click', function () {
+          var b = buildings.find(function (x) { return x.key === item.getAttribute('data-key'); });
+          if (b) {
+            showBuilding(b);
+            searchResults.style.display = 'none';
+            searchInput.value = b.label;
+          }
+        });
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.map-search')) searchResults.style.display = 'none';
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var cat = btn.getAttribute('data-category');
+        markerLayer.clearLayers();
+        buildings.forEach(function (b) {
+          if (cat === 'all' || b.category === cat) {
+            markerLayer.addLayer(markers[b.key]);
+          }
+        });
+      });
+    });
+
+    if (highlightKey) {
+      var b = buildings.find(function (x) { return x.key === highlightKey; });
+      if (b) {
+        map.setView([b.lat, b.lng], 19);
+        showBuilding(b);
+      }
+    }
+
+    function distance(lat1, lon1, lat2, lon2) {
+      var R = 6371e3;
+      var p1 = lat1 * Math.PI / 180, p2 = lat2 * Math.PI / 180;
+      var dp = (lat2 - lat1) * Math.PI / 180;
+      var dl = (lon2 - lon1) * Math.PI / 180;
+      var a = Math.sin(dp/2) * Math.sin(dp/2) +
+              Math.cos(p1) * Math.cos(p2) *
+              Math.sin(dl/2) * Math.sin(dl/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+  })();
+</script>
+
+<style>
+  .map-text-label { background: transparent !important; border: none !important; pointer-events: auto !important; }
+
+  .building-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px; background: rgba(255, 255, 255, .94);
+    border-radius: 6px; font-size: 12px; font-weight: 700;
+    color: #0f172a; white-space: nowrap;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .18);
+    border: 1px solid rgba(0, 0, 0, .06);
+    cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .building-label:hover {
+    transform: translate(-50%, -50%) scale(1.08);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .25);
+    z-index: 1000;
+  }
+  .building-label-hi {
+    background: var(--label-color, #0b3d91); color: #fff;
+    border-color: transparent; animation: pulseLabel 1.6s infinite;
+  }
+  .building-label-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
+  }
+  .building-label-hi .building-label-dot {
+    background: #fff !important; border-color: var(--label-color, #0b3d91);
+  }
+  .building-label-text { letter-spacing: .3px; }
+
+  .gate-label {
+    display: inline-block; padding: 5px 12px;
+    background: #0b3d91; color: #fff; border-radius: 6px;
+    font-size: 12px; font-weight: 700; white-space: nowrap;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+    border: 2px solid #fff; letter-spacing: .3px;
+  }
+
+  @keyframes pulseLabel {
+    0%   { box-shadow: 0 0 0 0 var(--label-color, #0b3d91); }
+    70%  { box-shadow: 0 0 0 12px rgba(11, 61, 145, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(11, 61, 145, 0); }
+  }
+
+  #cspcMap { border-radius: 12px 12px 0 0; z-index: 1; }
+  .leaflet-container { background: #eef2f9; font-family: 'Inter', system-ui, sans-serif; }
+
+  .map-search { position: relative; margin-bottom: 12px; }
+  .map-search input {
+    width: 100%; padding: 12px 16px; font-size: 15px;
+    border: 2px solid var(--border); border-radius: 10px;
+    background: var(--bg-elev); color: var(--text);
+  }
+  .map-search input:focus { outline: none; border-color: var(--cspc-blue); }
+  .search-results {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 999;
+    background: var(--bg-elev); border: 1px solid var(--border);
+    border-radius: 10px; margin-top: 4px; max-height: 300px; overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  }
+  .search-item {
+    padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+    font-size: 14px; border-bottom: 1px solid var(--border);
+  }
+  .search-item:last-child { border-bottom: none; }
+  .search-item:hover { background: var(--bg-soft); }
+  .search-item .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .map-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-btn {
+    padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--bg-elev); color: var(--text); font-size: 13px; font-weight: 600;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    transition: all .15s ease;
+  }
+  .filter-btn:hover { background: var(--bg-soft); }
+  .filter-btn.active { background: var(--cspc-blue); color: #fff; border-color: var(--cspc-blue); }
+  .filter-btn .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .building-panel {
+    margin-top: 16px; padding: 20px; background: var(--bg-elev);
+    border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  }
+  .building-panel h3 { font-size: 20px; }
+
+  .map-legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    padding: 12px 14px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--text-muted);
+    background: var(--bg-elev); border-radius: 0 0 12px 12px;
+  }
+  .map-legend .dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 6px; vertical-align: middle;
+  }
+
+  [data-theme="dark"] .building-label {
+    background: rgba(30, 41, 59, .94); color: #e2e8f0;
+    border-color: rgba(255,255,255,.06);
+  }
+  [data-theme="dark"] .building-label-hi { background: var(--label-color, #7db0ff); color: #fff; }
+  [data-theme="dark"] .leaflet-tile { filter: brightness(.85) invert(1) hue-rotate(180deg) contrast(.9); }
+  [data-theme="dark"] .leaflet-control-attribution { background: rgba(0,0,0,.5) !important; color: #cbd5e1 !important; }
+  [data-theme="dark"] .leaflet-bar a { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+</style>

@@ -1,0 +1,81 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Event Registration</h1>
+    <p>Check your details, then confirm to get your QR code.</p>
+  </div>
+  <a class="btn secondary" href="/events/<%= event.id %>">← Back to event</a>
+</div>
+
+<div class="reg-layout">
+
+  <aside class="card reg-summary">
+    <h3 class="mt-0"><%= event.title %></h3>
+    <dl class="reg-facts">
+      <div><dt>Date</dt><dd><%= event.starts_fmt %></dd></div>
+      <div><dt>Until</dt><dd><%= event.ends_fmt %></dd></div>
+      <div><dt>Venue</dt><dd><%= event.venue_label %></dd></div>
+      <div><dt>Open to</dt><dd><div class="elig-chips"><% event.eligibility_list.forEach(function(n){ %><span class="elig-chip"><%= n %></span><% }); %></div></dd></div>
+      <div><dt>Slots</dt><dd><%= event.registered_count %> / <%= event.capacity %></dd></div>
+    </dl>
+  </aside>
+
+  <section class="card reg-form-card">
+    <h3 class="mt-0">Your details</h3>
+
+    <% if (errors.length) { %>
+      <div class="alert error">
+        <ul class="reg-errors">
+          <% errors.forEach(e => { %><li><%= e %></li><% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form method="POST" action="/events/<%= event.id %>/register" autocomplete="off">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+      <div class="field">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" required maxlength="100" value="<%= form.name %>">
+      </div>
+
+      <div class="field">
+        <label for="department">Department / College</label>
+        <input id="department" type="text" value="<%= form.department %>" readonly class="locked">
+        <div class="hint">Taken from your account and cannot be changed here.</div>
+      </div>
+
+      <div class="field">
+        <label for="program">Program</label>
+        <input id="program" type="text" value="<%= form.program %>" readonly class="locked">
+      </div>
+
+      <div class="grid grid-2">
+        <div class="field">
+          <label for="year_level">Year level</label>
+          <select id="year_level" name="year_level" required>
+            <option value="">Select year level</option>
+            <% yearLevels.forEach(y => { %>
+              <option value="<%= y %>" <%= form.year_level === y ? 'selected' : '' %>><%= y %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="section">Section</label>
+          <input id="section" name="section" type="text" required maxlength="10"
+                 placeholder="Example: 2A" value="<%= form.section %>" class="section-input">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" type="submit">Confirm registration</button>
+        <a class="btn secondary" href="/events/<%= event.id %>">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+</div>
+
+<%- include('partials/footer') %>

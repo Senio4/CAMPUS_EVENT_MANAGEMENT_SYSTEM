@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="<%= theme %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · CSPC Campus Events</title>
+  <link rel="icon" type="image/png" href="/img/cspc-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="container">
+      <div>Camarines Sur Polytechnic Colleges · Nabua, Camarines Sur</div>
+      <div class="socials">
+        <span>📧 testingandadmission@cspc.edu.ph</span>
+        <span>📞 (054) 288-6249</span>
+      </div>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand">
+        <img src="/img/cspc-logo.png" alt="CSPC Logo">
+        <span class="brand-text">
+          <span class="brand-title">CSPC Campus Events</span>
+          <span class="brand-sub">Event Management System</span>
+        </span>
+      </a>
+
+      <nav class="nav">
+        <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Events</a>
+        <a href="/campus-map" class="<%= currentPath === '/campus-map' ? 'active' : '' %>">Campus Map</a>
+
+        <% if (user) { %>
+          <% if (user.role === 'instructor') { %>
+            <a href="/instructor" class="<%= currentPath.startsWith('/instructor') ? 'active' : '' %>">My Classes</a>
+          <% } %>
+          <% if (user.role === 'organizer' || user.role === 'admin') { %>
+            <a href="/organizer/events" class="<%= currentPath.startsWith('/organizer') ? 'active' : '' %>">Manage Events</a>
+          <% } %>
+          <% if (user.role === 'admin') { %>
+            <a href="/admin" class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>">Admin</a>
+          <% } %>
+          <% if (user.role === 'student') { %>
+            <a href="/my-registrations" class="<%= currentPath === '/my-registrations' ? 'active' : '' %>">My Registrations</a>
+          <% } %>
+
+          <a href="/profile" class="user-chip" title="<%= user.name %> (<%= user.role %>) · My profile">
+            <%- include('avatar', { avatarPath: user.avatar_path, name: user.name, size: 'sm' }) %>
+            <span class="user-meta">
+              <span class="user-name"><%= user.name %></span>
+              <span class="user-role"><%= user.role %></span>
+            </span>
+          </a>
+
+          <form method="POST" action="/logout" style="display:inline">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button type="submit" class="btn small secondary">Logout</button>
+          </form>
+        <% } else { %>
+          <a href="/login" class="<%= currentPath === '/login' ? 'active' : '' %>">Login</a>
+          <a href="/register" class="<%= currentPath === '/register' ? 'active' : '' %>">Register</a>
+        <% } %>
+        <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <% if (flash) { %>
+        <div class="alert <%= flash.type %>"><%= flash.msg %></div>
+      <% } %>

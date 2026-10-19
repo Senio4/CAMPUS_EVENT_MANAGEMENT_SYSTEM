@@ -1,0 +1,75 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Attendance · <%= event.title %></h1>
+    <p><%= event.starts_fmt %> · <%= event.venue_label %></p>
+  </div>
+  <div class="btn-row">
+    <a class="btn secondary" href="/organizer/events">← Back</a>
+    <a class="btn gold" href="/organizer/events/<%= event.id %>/export.csv">⬇ Download all (CSV)</a>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3 class="mt-0">Scan QR code</h3>
+    <p class="muted">Use a handheld scanner, or paste the token/JSON payload.</p>
+    <form id="scanForm" class="field">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <input id="scanToken" type="text" placeholder="Paste QR token or JSON..."
+             autofocus autocomplete="off">
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn" type="submit">Mark present</button>
+      </div>
+    </form>
+    <div id="scanResult" style="margin-top:14px"></div>
+  </div>
+
+  <div class="card">
+    <h3 class="mt-0">Summary</h3>
+    <p><strong>Registered:</strong> <%= participants.length %></p>
+    <p><strong>Present:</strong> <%= participants.filter(p => p.present).length %></p>
+    <p><strong>Absent:</strong> <%= participants.filter(p => !p.present).length %></p>
+  </div>
+</div>
+
+<h3 style="margin:24px 0 10px">Participants by department, year &amp; section</h3>
+<%- include('../partials/attendance-groups', { departments: departments, showActions: true, eventId: event.id, exportBase: '/organizer/events/' + event.id + '/export.csv' }) %>
+
+<script>
+  (function () {
+    var form = document.getElementById('scanForm');
+    var input = document.getElementById('scanToken');
+    var out = document.getElementById('scanResult');
+    var csrf = document.querySelector('input[name="_csrf"]').value;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var token = input.value.trim();
+      if (!token) return;
+      out.innerHTML = '<p class="muted">Checking…</p>';
+
+      fetch('/organizer/events/<%= event.id %>/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+        body: JSON.stringify({ token: token }),
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          out.innerHTML = '<div class="alert success">✅ ' + data.message + '</div>';
+          input.value = '';
+          setTimeout(function () { location.reload(); }, 800);
+        } else {
+          out.innerHTML = '<div class="alert error">❌ ' + data.error + '</div>';
+        }
+      })
+      .catch(function () {
+        out.innerHTML = '<div class="alert error">Network error.</div>';
+      });
+    });
+  })();
+</script>
+
+<%- include('../partials/footer') %>

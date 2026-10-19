@@ -1,0 +1,47 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Attendance · <%= event.title %></h1>
+    <p>
+      <%= event.starts_fmt %> · <%= event.venue_label %>
+      <br>
+      <small class="muted">
+        Showing students from:
+        <strong><%= sectionCodes.map(c => c.program + '-' + c.section).join(', ') %></strong>
+      </small>
+    </p>
+  </div>
+  <div class="btn-row">
+    <a class="btn secondary" href="/instructor">← Back</a>
+    <a class="btn gold" href="/instructor/events/<%= event.id %>/export.csv">⬇ Download all sections (CSV)</a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="label">My Students Registered</div>
+    <div class="value"><%= rows.length %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Present</div>
+    <div class="value"><%= rows.filter(r => r.present).length %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Absent</div>
+    <div class="value"><%= rows.filter(r => !r.present).length %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Attendance Rate</div>
+    <div class="value"><%= rows.length ? Math.round(rows.filter(r => r.present).length / rows.length * 100) : 0 %>%</div>
+  </div>
+</div>
+
+<h3 style="margin:24px 0 10px">Student attendance by department, year &amp; section</h3>
+<% if (!rows.length) { %>
+  <div class="card"><p class="muted">No students from your sections registered for this event.</p></div>
+<% } else { %>
+  <%- include('../partials/attendance-groups', { departments: departments, showActions: false, eventId: event.id, exportBase: '/instructor/events/' + event.id + '/export.csv' }) %>
+<% } %>
+
+<%- include('../partials/footer') %>

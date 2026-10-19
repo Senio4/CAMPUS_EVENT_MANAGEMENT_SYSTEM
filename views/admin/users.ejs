@@ -1,0 +1,109 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div><h1>Users</h1><p><%= users.length %> total</p></div>
+  <a class="btn secondary" href="/admin">← Dashboard</a>
+</div>
+
+<div class="card">
+  <h3 class="mt-0">All users</h3>
+  <div class="scroll-x">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>College</th>
+          <th>Program</th>
+          <th>Year / Section</th>
+          <th>Handles / Position</th>
+          <th>Set Role</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(u => { %>
+          <tr>
+            <td>
+              <a class="att-person" href="/admin/users/<%= u.id %>" style="color:inherit;text-decoration:none">
+                <%- include('../partials/avatar', { avatarPath: u.avatar_path, name: u.name, size: 'sm' }) %>
+                <strong><%= u.name %></strong>
+              </a>
+            </td>
+            <td><%= u.email %></td>
+            <td>
+              <span class="pill <%= u.role === 'admin' ? 'full' : (u.role === 'organizer' ? 'ongoing' : (u.role === 'instructor' ? 'draft' : 'open')) %>">
+                <%= u.role %>
+              </span>
+            </td>
+            <td><%= u.college || '—' %></td>
+            <td><%= u.program || '—' %></td>
+            <td><%= [u.year_level, u.section].filter(Boolean).join(' / ') || '—' %></td>
+            <td>
+              <% if (u.role === 'instructor' && u.section) { %>
+                <span class="muted" style="font-size:12px"><%= u.section %></span>
+              <% } else if (u.role === 'organizer') { %>
+                <span style="font-size:12px">
+                  <%= u.organizer_position || '—' %>
+                  <% if (u.organizer_office) { %>
+                    <br><span class="muted"><%= u.organizer_office %></span>
+                  <% } %>
+                </span>
+              <% } else { %>
+                <span class="muted">—</span>
+              <% } %>
+            </td>
+            <td>
+              <form method="POST" action="/admin/users/<%= u.id %>/role" class="btn-row">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <select name="role" style="width:auto">
+                  <% ['student','organizer','instructor','admin'].forEach(r => { %>
+                    <option value="<%= r %>" <%= u.role === r ? 'selected' : '' %>><%= r %></option>
+                  <% }); %>
+                </select>
+                <button class="btn small">Save</button>
+              </form>
+            </td>
+            <td><a class="btn small secondary" href="/admin/users/<%= u.id %>">View profile</a></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <h3 class="mt-0">Students grouped by Department → Program → Year → Section</h3>
+  <% if (!Object.keys(grouped).length) { %>
+    <p class="muted">No students.</p>
+  <% } else { %>
+    <% Object.entries(grouped).forEach(([dep, programs]) => { %>
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-weight:600"><%= dep %></summary>
+        <% Object.entries(programs).forEach(([prog, years]) => { %>
+          <details style="margin:8px 0 0 16px">
+            <summary style="cursor:pointer"><%= prog %></summary>
+            <% Object.entries(years).forEach(([yr, sections]) => { %>
+              <details style="margin:8px 0 0 16px">
+                <summary style="cursor:pointer"><%= yr %></summary>
+                <% Object.entries(sections).forEach(([sec, list]) => { %>
+                  <div style="margin:8px 0 0 16px">
+                    <strong>Section <%= sec %></strong>
+                    <ul style="margin:4px 0 0 18px">
+                      <% list.forEach(s => { %>
+                        <li><a href="/admin/users/<%= s.id %>"><%= s.name %></a> <span class="muted">— <%= s.email %></span></li>
+                      <% }); %>
+                    </ul>
+                  </div>
+                <% }); %>
+              </details>
+            <% }); %>
+          </details>
+        <% }); %>
+      </details>
+    <% }); %>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

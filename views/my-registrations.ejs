@@ -1,0 +1,59 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>My Registrations</h1>
+    <p>Show the QR code at the entrance for attendance.</p>
+  </div>
+</div>
+
+<% if (!registrations.length) { %>
+  <div class="card text-center">
+    <p class="muted">You haven't registered for any event yet.</p>
+    <a class="btn" href="/">Browse events</a>
+  </div>
+<% } else { %>
+  <div class="grid grid-2">
+    <% registrations.forEach(r => { %>
+      <div class="card my-reg-card">
+        <% if (r.banner_path) { %>
+          <img src="<%= r.banner_path %>" alt="<%= r.event_title %>" class="event-card-banner">
+        <% } %>
+        <div class="flex-between">
+          <h3 class="mt-0"><%= r.event_title %></h3>
+          <span class="pill <%= r.live_status %>"><%= r.live_status %></span>
+        </div>
+        <p class="meta muted" style="font-size:13px">
+          🕒 <%= r.starts_fmt %><br>
+          📍 <%= r.venue_label %>
+        </p>
+        <% if (r.reg_name || r.reg_year_level || r.reg_section) { %>
+          <p class="my-reg-as">
+            Registered as <strong><%= r.reg_name || user.name %></strong><br>
+            <%= [r.reg_program, r.reg_year_level, r.reg_section ? 'Section ' + r.reg_section : ''].filter(Boolean).join(' · ') %>
+          </p>
+        <% } %>
+        <div class="qr-box" style="margin-top:12px">
+          <img id="qr-<%= r.id %>" src="/qr/<%= r.qr_token %>.png" alt="Attendance QR code" crossorigin="anonymous">
+          <div class="btn-row">
+            <button type="button" class="btn small gold" data-download="qr-<%= r.id %>" data-filename="cspc-event-<%= r.event_id %>.png">⬇ Download PNG</button>
+            <a class="btn small secondary" href="/qr/<%= r.qr_token %>.png" target="_blank">Open</a>
+          </div>
+          <p class="hint">
+            <% if (r.present) { %>
+              ✅ Marked present <%= r.present_at ? 'on ' + formatPresentAt(r.present_at) : '' %>
+            <% } else { %>
+              Not yet marked present
+            <% } %>
+          </p>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <a class="btn small secondary" href="/events/<%= r.event_id %>">Event details</a>
+          <a class="btn small secondary" href="/campus-map?venue=<%= r.venue_key %>">📍 Map</a>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } %>
+
+<%- include('partials/footer') %>

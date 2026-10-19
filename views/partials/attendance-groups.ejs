@@ -1,0 +1,116 @@
+<%
+  // Params: departments (from groupAttendance), showActions (bool), eventId, exportBase (CSV url)
+  const allYears = [...new Set(departments.flatMap(d => d.groups.map(g => g.year_level)))];
+  const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+%>
+
+<% if (!departments.length) { %>
+  <div class="card"><p class="muted">No registrations yet.</p></div>
+<% } else { %>
+
+  <div class="card att-filters">
+    <div class="grid grid-2">
+      <div class="field" style="margin:0">
+        <label for="attDept">Department</label>
+        <select id="attDept">
+          <option value="">All departments</option>
+          <% departments.forEach(d => { %>
+            <option value="<%= slug(d.department) %>"><%= d.department %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="field" style="margin:0">
+        <label for="attYear">Year level</label>
+        <select id="attYear">
+          <option value="">All years</option>
+          <% allYears.forEach(y => { %>
+            <option value="<%= slug(y) %>"><%= y %></option>
+          <% }); %>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <% departments.forEach(d => { %>
+    <section class="att-dept" data-dept="<%= slug(d.department) %>">
+      <div class="att-dept-head">
+        <h2><%= d.department %></h2>
+        <span class="muted"><%= d.present %> / <%= d.total %> present</span>
+      </div>
+
+      <% d.groups.forEach(g => { %>
+        <div class="card att-group" data-dept="<%= slug(d.department) %>" data-year="<%= slug(g.year_level) %>">
+          <div class="att-group-head">
+            <div>
+              <h3 class="mt-0" style="margin-bottom:2px"><%= g.year_level %> · Section <%= g.section %></h3>
+              <span class="muted"><%= g.program %></span>
+            </div>
+            <div class="att-group-actions">
+              <span class="pill open"><%= g.present %> present</span>
+              <span class="pill cancelled"><%= g.total - g.present %> absent</span>
+              <span class="muted att-count"><%= g.total %> registered</span>
+              <a class="btn small gold"
+                 href="<%= exportBase %>?program=<%= encodeURIComponent(g.program) %>&year=<%= encodeURIComponent(g.year_level) %>&section=<%= encodeURIComponent(g.section) %>">
+                ⬇ Download <%= g.section %>
+              </a>
+            </div>
+          </div>
+
+          <div class="scroll-x">
+            <table class="att-table <%= showActions ? 'has-actions' : '' %>">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Email</th><th>Status</th><th>Date &amp; time present</th>
+                  <% if (showActions) { %><th></th><% } %>
+                </tr>
+              </thead>
+              <tbody>
+                <% g.rows.forEach(p => { %>
+                  <tr>
+                    <td><div class="att-person"><%- include('avatar', { avatarPath: p.avatar_path, name: p.name, size: 'sm' }) %><strong><%= p.name %></strong></div></td>
+                    <td><%= p.email %></td>
+                    <td>
+                      <% if (p.present) { %><span class="pill open">present</span>
+                      <% } else { %><span class="pill cancelled">absent</span><% } %>
+                    </td>
+                    <td class="nowrap"><%= p.present ? formatPresentAt(p.present_at) : '—' %></td>
+                    <% if (showActions) { %>
+                      <td>
+                        <% if (!p.present) { %>
+                          <form method="POST" action="/organizer/events/<%= eventId %>/present/<%= p.reg_id %>">
+                            <input type="hidden" name="_csrf" value="<%= csrf %>">
+                            <button class="btn small">Mark present</button>
+                          </form>
+                        <% } %>
+                      </td>
+                    <% } %>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% }); %>
+    </section>
+  <% }); %>
+
+  <script>
+    (function () {
+      var dept = document.getElementById('attDept');
+      var year = document.getElementById('attYear');
+      function apply() {
+        document.querySelectorAll('.att-group').forEach(function (g) {
+          var ok = (!dept.value || g.dataset.dept === dept.value) &&
+                   (!year.value || g.dataset.year === year.value);
+          g.style.display = ok ? '' : 'none';
+        });
+        document.querySelectorAll('.att-dept').forEach(function (s) {
+          var any = Array.prototype.some.call(s.querySelectorAll('.att-group'), function (g) { return g.style.display !== 'none'; });
+          s.style.display = any ? '' : 'none';
+        });
+      }
+      dept.addEventListener('change', apply);
+      year.addEventListener('change', apply);
+    })();
+  </script>
+<% } %>

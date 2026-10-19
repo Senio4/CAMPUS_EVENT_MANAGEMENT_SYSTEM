@@ -1,0 +1,150 @@
+<%- include('partials/header') %>
+
+<section class="login-shell">
+  <!-- ========== LEFT: Brand panel ========== -->
+  <aside class="login-brand" aria-hidden="false">
+    <div class="login-brand-inner">
+      <span class="login-brand-badge">
+        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.8 5.5 21 7.5 13.5 2 9h7z"/></svg>
+        CSPC Event Portal
+      </span>
+
+      <h2 class="login-brand-title">Every campus event,<br>one place.</h2>
+      <p class="login-brand-text">
+        Discover upcoming activities, register in seconds, and check in with your personal QR code.
+      </p>
+
+      <ul class="login-points">
+        <li>
+          <span class="login-point-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </span>
+          <span>
+            <strong>Browse events</strong>
+            <small>Seminars, sports, org activities and more</small>
+          </span>
+        </li>
+        <li>
+          <span class="login-point-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M20 20h.01M17 17v3"/></svg>
+          </span>
+          <span>
+            <strong>QR check-in</strong>
+            <small>Fast, paperless attendance</small>
+          </span>
+        </li>
+        <li>
+          <span class="login-point-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </span>
+          <span>
+            <strong>Campus map</strong>
+            <small>Find the venue before you arrive</small>
+          </span>
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- ========== RIGHT: Form panel ========== -->
+  <div class="login-panel">
+    <div class="login-panel-inner">
+      <div class="login-head">
+        <div class="login-lock">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <h1>Welcome back</h1>
+        <p class="sub">Log in to register for events and view your QR codes.</p>
+      </div>
+
+      <form method="POST" action="/login" id="loginForm" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <div class="input-with-icon">
+            <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+            <input id="email" type="email" name="email" required autofocus
+                   autocomplete="username" placeholder="you@cspc.edu.ph"
+                   value="<%= email || '' %>">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-with-icon">
+            <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 11-7.8 7.8 5.5 5.5 0 017.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg>
+            <input id="password" type="password" name="password" required
+                   autocomplete="current-password" placeholder="Enter your password">
+            <button type="button" class="password-toggle" id="togglePassword"
+                    aria-label="Show password" aria-pressed="false">
+              <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn block login-submit" type="submit">
+          Log in
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </form>
+
+      <p class="login-alt">
+        Don't have an account? <a href="/register">Create one</a>
+      </p>
+
+      <div class="login-divider"><span>Demo accounts</span></div>
+
+      <div class="demo-grid">
+        <button type="button" class="demo-chip" data-email="admin@campus.test" data-pass="Admin123!">
+          <span class="demo-role">Admin</span>
+          <span class="demo-mail">admin@campus.test</span>
+        </button>
+        <button type="button" class="demo-chip" data-email="organizer@campus.test" data-pass="Organizer123!">
+          <span class="demo-role">Organizer</span>
+          <span class="demo-mail">organizer@campus.test</span>
+        </button>
+        <button type="button" class="demo-chip" data-email="instructor@campus.test" data-pass="Instructor123!">
+          <span class="demo-role">Instructor</span>
+          <span class="demo-mail">instructor@campus.test</span>
+        </button>
+        <button type="button" class="demo-chip" data-email="student@campus.test" data-pass="Student123!">
+          <span class="demo-role">Student</span>
+          <span class="demo-mail">student@campus.test</span>
+        </button>
+      </div>
+      <p class="hint text-center" style="margin-top:10px">Click an account to fill in the form.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var pw = document.getElementById('password');
+    var toggle = document.getElementById('togglePassword');
+    var open = toggle.querySelector('.eye-open');
+    var closed = toggle.querySelector('.eye-closed');
+
+    toggle.addEventListener('click', function () {
+      var show = pw.type === 'password';
+      pw.type = show ? 'text' : 'password';
+      open.style.display = show ? 'none' : '';
+      closed.style.display = show ? '' : 'none';
+      toggle.setAttribute('aria-pressed', show);
+      toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+
+    document.querySelectorAll('.demo-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        document.getElementById('email').value = chip.dataset.email;
+        pw.value = chip.dataset.pass;
+        document.querySelectorAll('.demo-chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        pw.focus();
+      });
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>

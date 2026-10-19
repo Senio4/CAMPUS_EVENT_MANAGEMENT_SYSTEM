@@ -1,0 +1,340 @@
+<%- include('partials/header') %>
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <%- include('partials/icons', { iconName: 'graduation-cap', size: 14 }) %>
+      <span>Camarines Sur Polytechnic Colleges</span>
+    </div>
+
+    <h1 class="hero-title">
+      Campus Event Management System
+    </h1>
+
+    <p class="hero-subtitle">
+      A centralized platform for CSPC students, organizers, and instructors.
+      Browse events, register with QR codes, and navigate venues on the interactive campus map.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#events" class="btn-hero btn-hero-primary">
+        <%- include('partials/icons', { iconName: 'calendar', size: 18 }) %>
+        <span>Browse Events</span>
+      </a>
+      <a href="/campus-map" class="btn-hero btn-hero-secondary">
+        <%- include('partials/icons', { iconName: 'compass', size: 18 }) %>
+        <span>Explore Campus Map</span>
+      </a>
+    </div>
+
+    <div class="hero-features">
+      <div class="hero-feature">
+        <div class="hero-feature-icon">
+          <%- include('partials/icons', { iconName: 'calendar', size: 18 }) %>
+        </div>
+        <div class="hero-feature-text">
+          <div class="hero-feature-title">Live Events</div>
+          <div class="hero-feature-desc">Real-time schedule</div>
+        </div>
+      </div>
+
+      <div class="hero-feature">
+        <div class="hero-feature-icon">
+          <%- include('partials/icons', { iconName: 'qr-code', size: 18 }) %>
+        </div>
+        <div class="hero-feature-text">
+          <div class="hero-feature-title">QR Attendance</div>
+          <div class="hero-feature-desc">Fast check-in</div>
+        </div>
+      </div>
+
+      <div class="hero-feature">
+        <div class="hero-feature-icon">
+          <%- include('partials/icons', { iconName: 'map-pin', size: 18 }) %>
+        </div>
+        <div class="hero-feature-text">
+          <div class="hero-feature-title">Campus Map</div>
+          <div class="hero-feature-desc">Walking directions</div>
+        </div>
+      </div>
+
+      <div class="hero-feature">
+        <div class="hero-feature-icon">
+          <%- include('partials/icons', { iconName: 'shield', size: 18 }) %>
+        </div>
+        <div class="hero-feature-text">
+          <div class="hero-feature-title">Verified Records</div>
+          <div class="hero-feature-desc">Audit-ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- EVENTS LIST -->
+<!-- ============================================================ -->
+<div class="page-head" id="events">
+  <div>
+    <h1>Upcoming Events</h1>
+    <p><%= events.length %> event<%= events.length === 1 ? '' : 's' %> found</p>
+  </div>
+</div>
+
+<form method="GET" action="/" class="card" style="margin-bottom:20px">
+  <div class="grid grid-2" style="align-items:end">
+    <div class="field mb-0">
+      <label for="q">Search</label>
+      <div class="input-with-icon">
+        <%- include('partials/icons', { iconName: 'search', size: 16, cls: 'input-icon' }) %>
+        <input id="q" type="text" name="q" value="<%= q %>" placeholder="Search events, venues, or organizers...">
+      </div>
+    </div>
+    <div class="field mb-0">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="">All statuses</option>
+        <% statuses.forEach(s => { %>
+          <option value="<%= s %>" <%= status === s ? 'selected' : '' %>><%= s.charAt(0).toUpperCase() + s.slice(1) %></option>
+        <% }); %>
+      </select>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:12px">
+    <button class="btn" type="submit">
+      <%- include('partials/icons', { iconName: 'filter', size: 16 }) %>
+      Apply filters
+    </button>
+    <a class="btn secondary" href="/">Reset</a>
+  </div>
+</form>
+
+<% if (!events.length) { %>
+  <div class="card text-center empty-state">
+    <%- include('partials/icons', { iconName: 'search', size: 48, cls: 'empty-icon' }) %>
+    <h3>No events found</h3>
+    <p class="muted">Try adjusting your search or filter settings.</p>
+    <a class="btn" href="/">Clear filters</a>
+  </div>
+<% } else { %>
+  <div class="grid grid-3">
+    <% events.forEach(e => { %>
+      <article class="card event-card">
+        <% if (e.banner_path) { %>
+          <img src="<%= e.banner_path %>" alt="<%= e.title %>" class="event-card-banner">
+        <% } else { %>
+          <div class="event-card-banner event-card-banner-placeholder">
+            <%- include('partials/icons', { iconName: 'calendar', size: 36 }) %>
+          </div>
+        <% } %>
+
+        <div class="event-card-top">
+          <span class="pill <%= e.live_status %>"><%= e.live_status %></span>
+          <span class="event-card-capacity">
+            <%- include('partials/icons', { iconName: 'users', size: 13 }) %>
+            <span><%= e.registered_count %>/<%= e.capacity %></span>
+          </span>
+        </div>
+
+        <h3 class="event-card-title">
+          <a href="/events/<%= e.id %>"><%= e.title %></a>
+        </h3>
+
+        <div class="event-card-meta">
+          <div class="event-card-meta-item">
+            <%- include('partials/icons', { iconName: 'clock', size: 14 }) %>
+            <span><%= e.starts_fmt %></span>
+          </div>
+          <div class="event-card-meta-item">
+            <%- include('partials/icons', { iconName: 'map-pin', size: 14 }) %>
+            <span><%= e.venue_label %></span>
+          </div>
+          <div class="event-card-meta-item">
+            <%- include('partials/icons', { iconName: 'user', size: 14 }) %>
+            <span><%= e.organizer_name %></span>
+          </div>
+        </div>
+
+        <% if (e.restricted) { %>
+          <div class="elig-row"><span class="muted elig-label">Open to:</span><div class="elig-chips"><% e.eligibility_list.forEach(function(n){ %><span class="elig-chip"><%= n %></span><% }); %></div></div>
+        <% } %>
+        <p class="event-card-desc"><%= e.description %></p>
+
+        <div class="event-card-actions">
+          <a class="btn small" href="/events/<%= e.id %>">
+            View Details
+            <%- include('partials/icons', { iconName: 'arrow-right', size: 14 }) %>
+          </a>
+          <button type="button" class="btn small secondary js-open-map"
+                  data-venue-key="<%= e.venue_key %>"
+                  data-venue-label="<%= e.venue_label %>"
+                  data-event-title="<%= e.title %>">
+            <%- include('partials/icons', { iconName: 'map-pin', size: 14 }) %>
+            Map
+          </button>
+        </div>
+      </article>
+    <% }); %>
+  </div>
+<% } %>
+
+<!-- ============================================================ -->
+<!-- MAP MODAL -->
+<!-- ============================================================ -->
+<div id="mapModal" class="map-modal" style="display:none" aria-hidden="true">
+  <div class="map-modal-backdrop" onclick="closeMapModal()"></div>
+  <div class="map-modal-content">
+    <div class="map-modal-header">
+      <div>
+        <h3 id="mapModalTitle" style="margin:0">Event location</h3>
+        <p id="mapModalSubtitle" class="muted" style="margin:4px 0 0;font-size:13px"></p>
+      </div>
+      <button type="button" class="map-modal-close" onclick="closeMapModal()" aria-label="Close">
+        <%- include('partials/icons', { iconName: 'x', size: 18 }) %>
+      </button>
+    </div>
+    <div id="modalMap" style="width:100%;height:420px"></div>
+    <div class="map-modal-body">
+      <div class="flex-between" style="margin-bottom:8px">
+        <strong>Walking directions from Main Gate</strong>
+        <a id="mapModalGmaps" class="btn small secondary" target="_blank" rel="noopener">
+          Google Maps
+          <%- include('partials/icons', { iconName: 'external-link', size: 12 }) %>
+        </a>
+      </div>
+      <ol id="mapModalDirections" style="margin:0 0 0 18px;color:var(--text-muted)"></ol>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script type="application/json" id="campusMapData">
+  <%- JSON.stringify({
+    buildings: typeof BUILDINGS !== 'undefined' ? BUILDINGS : [],
+    gate: typeof MAIN_GATE !== 'undefined' ? MAIN_GATE : { lat: 13.405773, lng: 123.374242 },
+    center: typeof CAMPUS_CENTER !== 'undefined' ? CAMPUS_CENTER : { lat: 13.4059, lng: 123.3758, zoom: 18 }
+  }) %>
+</script>
+
+<script>
+  (function () {
+    var el = document.getElementById('campusMapData');
+    if (!el || typeof L === 'undefined') return;
+    var data;
+    try { data = JSON.parse(el.textContent); } catch (e) { return; }
+
+    var buildings = data.buildings || [];
+    var gate = data.gate;
+    var center = data.center;
+
+    var modalMap = null;
+    var modalRouteLine = null;
+    var venueMarker = null;
+
+    function initModalMap() {
+      if (modalMap) return;
+      modalMap = L.map('modalMap', {
+        center: [center.lat, center.lng], zoom: 18,
+        zoomControl: true, scrollWheelZoom: true,
+      });
+      var street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 20, attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(modalMap);
+      var satellite = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+      );
+      L.control.layers({ 'Street': street, 'Satellite': satellite }, null, { position: 'topright', collapsed: true }).addTo(modalMap);
+      L.marker([gate.lat, gate.lng]).addTo(modalMap).bindTooltip('CSPC Main Gate', { permanent: false });
+    }
+
+    function distance(lat1, lon1, lat2, lon2) {
+      var R = 6371e3;
+      var p1 = lat1 * Math.PI / 180, p2 = lat2 * Math.PI / 180;
+      var dp = (lat2 - lat1) * Math.PI / 180;
+      var dl = (lon2 - lon1) * Math.PI / 180;
+      var a = Math.sin(dp/2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    window.openMapModal = function (venueKey, venueLabel, eventTitle) {
+      initModalMap();
+      var b = buildings.find(function (x) { return x.key === venueKey; });
+
+      if (!b) {
+        modalMap.setView([center.lat, center.lng], 18);
+        document.getElementById('mapModalTitle').textContent = venueLabel || 'Campus';
+        document.getElementById('mapModalSubtitle').textContent = 'Showing campus center.';
+        document.getElementById('mapModalDirections').innerHTML =
+          '<li>Enter at CSPC Main Gate</li><li>Ask at the guard house for directions</li>';
+        document.getElementById('mapModalGmaps').href =
+          'https://www.google.com/maps/search/' + encodeURIComponent(venueLabel || 'CSPC Nabua');
+        document.getElementById('mapModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        setTimeout(function () { modalMap.invalidateSize(); }, 100);
+        return;
+      }
+
+      document.getElementById('mapModalTitle').textContent = b.label;
+      document.getElementById('mapModalSubtitle').textContent = eventTitle || '';
+
+      if (venueMarker) modalMap.removeLayer(venueMarker);
+      if (modalRouteLine) modalMap.removeLayer(modalRouteLine);
+
+      venueMarker = L.marker([b.lat, b.lng]).addTo(modalMap);
+      venueMarker.bindTooltip(b.label, { permanent: false });
+      venueMarker.openTooltip();
+
+      modalRouteLine = L.polyline(
+        [[gate.lat, gate.lng], [b.lat, b.lng]],
+        { color: '#0b3d91', weight: 4, dashArray: '10 8', opacity: 0.85 }
+      ).addTo(modalMap);
+
+      modalMap.fitBounds(modalRouteLine.getBounds(), { padding: [60, 60] });
+
+      var dist = Math.round(distance(gate.lat, gate.lng, b.lat, b.lng));
+      document.getElementById('mapModalDirections').innerHTML =
+        '<li>Enter at CSPC Main Gate (Maharlika Highway)</li>' +
+        '<li>Walk about ' + dist + ' meters toward the campus center</li>' +
+        '<li>' + b.label + ' will be on your ' + (b.lng > gate.lng ? 'left' : 'right') + '</li>';
+
+      document.getElementById('mapModalGmaps').href =
+        'https://www.google.com/maps/dir/?api=1&origin=' +
+        gate.lat + ',' + gate.lng + '&destination=' +
+        b.lat + ',' + b.lng + '&travelmode=walking';
+
+      document.getElementById('mapModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function () { modalMap.invalidateSize(); }, 100);
+    };
+
+    window.closeMapModal = function () {
+      document.getElementById('mapModal').style.display = 'none';
+      document.body.style.overflow = '';
+    };
+
+    document.querySelectorAll('.js-open-map').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        window.openMapModal(
+          btn.getAttribute('data-venue-key'),
+          btn.getAttribute('data-venue-label'),
+          btn.getAttribute('data-event-title')
+        );
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') window.closeMapModal();
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>

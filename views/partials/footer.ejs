@@ -1,0 +1,48 @@
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <img src="/img/cspc-logo.png" alt="CSPC" style="width:56px;margin-bottom:8px;">
+        <h4>CSPC Campus Events</h4>
+        <p style="font-size:14px;line-height:1.5;margin:0;">
+          Camarines Sur Polytechnic Colleges<br>
+          Nabua, Camarines Sur, Philippines
+        </p>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <a href="/">Browse Events</a>
+        <a href="/campus-map">Campus Map</a>
+        <a href="/login">Login</a>
+        <a href="/register">Create Account</a>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <a href="mailto:testingandadmission@cspc.edu.ph">testingandadmission@cspc.edu.ph</a>
+        <a href="tel:+63542886249">(054) 288-6249</a>
+        <p style="font-size:13px;opacity:.8;margin-top:8px;">Student Testing and Admission Office</p>
+      </div>
+    </div>
+    <div class="copy">© <%= year %> Camarines Sur Polytechnic Colleges · All rights reserved.</div>
+  </footer>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const btn  = document.getElementById('themeToggle');
+      const setIcon = () => btn && (btn.textContent = root.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙');
+      setIcon();
+      btn && btn.addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        document.cookie = 'theme=' + next + '; path=/; max-age=31536000; SameSite=Lax';
+        try { localStorage.setItem('theme', next); } catch (e) {}
+        setIcon();
+      });
+    })();
+  </script>
+  <script src="/js/qr-download.js"></script>
+</body>
+</html>

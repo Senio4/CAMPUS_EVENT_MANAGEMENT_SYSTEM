@@ -1,0 +1,6 @@
+<%
+  // Params: avatarPath (string|null), name (string), size ('sm' | 'md' | 'lg', default 'sm')
+  var _av = (typeof avatarPath !== 'undefined' && avatarPath) ? avatarPath : null;
+  var _nm = (typeof name !== 'undefined' && name) ? String(name) : '?';
+  var _sz = (typeof size !== 'undefined' && size) ? size : 'sm';
+%><% if (_av) { %><img class="avatar avatar-<%= _sz %>" src="<%= _av %>" alt="<%= _nm %>" loading="lazy"><% } else { %><span class="avatar avatar-<%= _sz %> avatar-fallback" aria-hidden="true"><%= _nm.trim().charAt(0).toUpperCase() %></span><% } %>
