@@ -12,8 +12,8 @@ db.pragma('foreign_keys = ON');
 
 const current = db.pragma('user_version', { simple: true });
 if (current !== SCHEMA_VERSION) {
-  console.warn(`Schema mismatch (v${current} → v${SCHEMA_VERSION}). Rebuilding database...`);
-  db.exec(`DROP TABLE IF EXISTS registrations; DROP TABLE IF EXISTS events; DROP TABLE IF EXISTS users;`);
+  console.warn(Schema mismatch (v${current} → v${SCHEMA_VERSION}). Rebuilding database...);
+  db.exec(DROP TABLE IF EXISTS registrations; DROP TABLE IF EXISTS events; DROP TABLE IF EXISTS users;);
 }
 
 db.exec(`
@@ -86,7 +86,7 @@ if (!eventCols.includes('eligible_colleges')) {
 // Migration: details the student fills in when registering for an event.
 const regCols = db.prepare('PRAGMA table_info(registrations)').all().map(c => c.name);
 for (const col of ['reg_name', 'reg_department', 'reg_program', 'reg_year_level', 'reg_section']) {
-  if (!regCols.includes(col)) db.exec(`ALTER TABLE registrations ADD COLUMN ${col} TEXT`);
+  if (!regCols.includes(col)) db.exec(ALTER TABLE registrations ADD COLUMN ${col} TEXT);
 }
 
 // Migration: optional profile picture (path under /uploads/avatars). NULL = no picture yet.
@@ -95,11 +95,5 @@ if (!userCols.includes('avatar_path')) {
   db.exec('ALTER TABLE users ADD COLUMN avatar_path TEXT');
 }
 
-for (const col of ['student_id', 'last_name']) {
-  if (!userCols.includes(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} TEXT`);
-}
-
-db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_student_id ON users(student_id)');
-
-db.pragma(`user_version = ${SCHEMA_VERSION}`);
+db.pragma(user_version = ${SCHEMA_VERSION});
 module.exports = db;

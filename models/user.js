@@ -4,10 +4,6 @@ function findByEmail(email) {
   return db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 }
 
-function findByStudentId(studentId) {
-  return db.prepare('SELECT id FROM users WHERE student_id = ?').get(studentId);
-}
-
 function findById(id) {
   return db.prepare(`
     SELECT id, name, email, role, college, program, department, year_level, section,
@@ -29,18 +25,18 @@ function setAvatar(id, avatarPath) {
 }
 
 function create({
-  name, last_name, student_id, email, password_hash, role,
+  name, email, password_hash, role,
   college, program, department, year_level, section,
   organizer_position, organizer_office,
 }) {
   const info = db.prepare(`
     INSERT INTO users (
-      name, last_name, student_id, email, password_hash, role,
+      name, email, password_hash, role,
       college, program, department, year_level, section,
       organizer_position, organizer_office
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    name, last_name || null, student_id || null, email, password_hash, role,
+    name, email, password_hash, role,
     college || null, program || null, department || null,
     year_level || null, section || null,
     organizer_position || null, organizer_office || null
@@ -142,7 +138,6 @@ function findInstructors() {
 }
 
 module.exports = {
-  findByEmail, findByStudentId, findById, findDetailById, setAvatar, create,
-  listStudentsGrouped, listAll, updateRole,
+  findByEmail, findById, findDetailById, setAvatar, create, listStudentsGrouped, listAll, updateRole,
   parseSectionCodes, programShortToLong, listStudentsByInstructor, findInstructors,
 };
