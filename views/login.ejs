@@ -61,10 +61,22 @@
         <input type="hidden" name="_csrf" value="<%= csrf %>">
 
         <div class="field">
+          <label>Log in as</label>
+          <div class="login-roles" role="radiogroup" aria-label="Log in as">
+            <% ['student', 'organizer', 'instructor', 'admin'].forEach(function (r, i) { %>
+              <label class="login-role <%= i === 0 ? 'active' : '' %>">
+                <input type="radio" name="role" value="<%= r %>" <%= i === 0 ? 'checked' : '' %>>
+                <span style="text-transform:capitalize"><%= r %></span>
+              </label>
+            <% }); %>
+          </div>
+        </div>
+
+        <div class="field">
           <label for="email">Email address</label>
           <div class="input-with-icon">
             <svg class="input-icon icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
-            <input id="email" type="email" name="email" required autofocus
+            <input id="email" type="email" name="email" required
                    autocomplete="username" placeholder="you@cspc.edu.ph"
                    value="<%= email || '' %>">
           </div>
@@ -135,8 +147,19 @@
       toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     });
 
+    function syncRoles() {
+      document.querySelectorAll('.login-role').forEach(function (l) {
+        l.classList.toggle('active', l.querySelector('input').checked);
+      });
+    }
+    document.querySelectorAll('input[name="role"]').forEach(function (r) { r.addEventListener('change', syncRoles); });
+
     document.querySelectorAll('.demo-chip').forEach(function (chip) {
       chip.addEventListener('click', function () {
+        // pick the matching role so the demo account logs in under its own section
+        var demoRole = chip.querySelector('.demo-role').textContent.trim().toLowerCase();
+        var demoRadio = document.querySelector('input[name="role"][value="' + demoRole + '"]');
+        if (demoRadio) { demoRadio.checked = true; syncRoles(); }
         document.getElementById('email').value = chip.dataset.email;
         pw.value = chip.dataset.pass;
         document.querySelectorAll('.demo-chip').forEach(function (c) { c.classList.remove('active'); });
