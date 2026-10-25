@@ -95,5 +95,11 @@ if (!userCols.includes('avatar_path')) {
   db.exec('ALTER TABLE users ADD COLUMN avatar_path TEXT');
 }
 
+for (const col of ['student_id', 'last_name']) {
+  if (!userCols.includes(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} TEXT`);
+}
+
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_student_id ON users(student_id)');
+
 db.pragma(`user_version = ${SCHEMA_VERSION}`);
 module.exports = db;
